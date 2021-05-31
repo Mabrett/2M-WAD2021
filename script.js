@@ -465,3 +465,137 @@ function loadListAllForAdmin() {
     });
 }
 
+
+/*********************************************** Contact and Propertie-Fields ************************************************/
+
+
+//creates new contact through AddContactWindow Form
+function addContact() {
+    //get form fields from html
+	var owner = document.getElementById("owner");
+    var firstName = document.getElementById("firstName");
+    var lastName = document.getElementById("lastName");
+    var streetNumber = document.getElementById("streetNumber");
+    var zip = document.getElementById("zip");
+    var city = document.getElementById("city");
+	var state = document.getElementById("state");
+    var country = document.getElementById("country");
+    var isPrivate = document.getElementById("isPrivate");
+    //create contact
+    var contact = new createContact(
+     	owner.value,
+        firstName.value,
+        lastName.value,
+        streetNumber.value,
+        zip.value,
+        city.value,
+		state.value,
+        country.value,
+        isPrivate.checked
+    );
+    //save contact in contacts-array
+    contacts.push(contact);
+    //show Map Window
+    showMapWindow();
+    //set input back to zero
+    firstName.value = "";
+    lastName.value = "";
+    streetNumber.value = "";
+    zip.value = "";
+    city.value = "";
+	state.value = "";
+    country.value = "";
+    isPrivate.checked = true;
+}
+
+//gets the information for the UpdateContactWindow
+function getContactInfo(contact) {
+    //get form fields from html
+    var owner = document.getElementById("updateOwner");
+    var firstName = document.getElementById("updateFirstname");
+    var lastName = document.getElementById("updateLastName");
+    var streetNumber = document.getElementById("updateStreetNumber");
+    var zip = document.getElementById("updateZip");
+    var city = document.getElementById("updateCity");
+	var state = document.getElementById("updateState");	
+    var country = document.getElementById("updateCountry");
+    var isPrivate = document.getElementById("updateIsPrivate");
+    //insert contact values in form fields
+	//document.getElementById("owner").selectedIndex = "1";
+    owner.value = contact.owner;
+    firstName.value = contact.firstName;
+    lastName.value = contact.lastName;
+    streetNumber.value = contact.street;
+    zip.value = contact.zip;
+    city.value = contact.city;
+	state.value = contact.state;
+    country.value = contact.country;
+    isPrivate.checked = contact.isPrivate;
+}
+
+//deletes given user if present in the contacts array
+function deleteUser() {
+	var owner = document.getElementById("updateOwner");
+    //if normalo is logged in and wants to delete an admin contact
+    if(isAdminTest === false && owner.value === "admina") {
+		//display dialog
+		forbiddenDelete();
+	} 
+	else {
+		//create temporary array
+        var filteredArray = [];
+		//store contacts-array in temporary array without contact which should be deleted
+        filteredArray = contacts.filter((item) => item !== tempContact)
+		//store temporary array in contacts-array
+        contacts = filteredArray;	
+		// return to mapwindow		
+		showMapWindow();
+    }
+}
+
+//creates new contact through AddContactWindow Form
+function updateUser() {
+	var owner = document.getElementById("updateOwner");
+	//normalo can't update contacts from admin
+	if(isAdminTest === false && owner.value === "admina") {
+		//display dialog
+		forbiddenUpdate();
+	}
+	else{
+		//create temporary array
+		var filteredArray = [];
+		//store contacts-array in temporary array without contact which should be updated
+		filteredArray = contacts.filter((item) => item !== tempContact)
+		//store temporary array in contacts-array
+		contacts = filteredArray;
+		//create a new contact with the properties of the old one + updated data
+		//get form fields from html
+		var owner = document.getElementById("updateOwner");
+		var firstName = document.getElementById("updateFirstname");
+		var lastName = document.getElementById("updateLastName");
+		var streetNumber = document.getElementById("updateStreetNumber");
+		var zip = document.getElementById("updateZip");
+		var city = document.getElementById("updateCity");
+		var state = document.getElementById("updateState");	
+		var country = document.getElementById("updateCountry");
+		var isPrivate = document.getElementById("updateIsPrivate");
+        //create contact
+		var newOldContact = new createContact(
+        owner.value,
+        firstName.value,
+        lastName.value,
+        streetNumber.value,
+        zip.value,
+        city.value,
+		state.value,
+        country.value,
+        isPrivate.checked
+		);
+		//save contact in array
+		contacts.push(newOldContact);
+		//backFromUpdateToMap();
+		showMapWindow();
+	}
+}
+
+
