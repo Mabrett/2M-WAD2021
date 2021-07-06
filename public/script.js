@@ -740,49 +740,79 @@ function updateUser() {
         else {
             isPrivate = false;
         }
-        var geocord = tempContact.geocord;
+        //var geocord = tempContact.geocord;
 
-        //create object for parsing to JSON
-        var updateMe = {
-            owner,
-            firstName,
-            lastName,
-            streetNumber,
-            zip,
-            city,
-            state,
-            country,
-            isPrivate,
-            geocord
-        }
-        //create request
-        let httpRequest = new XMLHttpRequest();
-        //set url
-        let url = "http://localhost:3000/contacts/" + changeId;
-        httpRequest.open("PUT", url, true)
-        httpRequest.setRequestHeader("Content-Type", "application/json");
-        //if connection fails
-        httpRequest.onerror = function () {
-            console.log("Connecting to server with " + url + " failed!\n");
-        };
-        //response from server
-        httpRequest.onload = function (e) {
-            //store received status in object
-            let status = this.status;
-            //if response was code 204
-            if (status === 204) {
-                console.log(status);
+        //store street + zip in object
+        var address = streetNumber + zip;
+        //get geocords from address
+        /* this is the only time when google geocoding is used: when creating a new contact
+        all additional drawings on map will use latidute/longitude only to prevent possible costs */
+        geocoder.geocode({ 'address': address }, function (results, status) {
+            if (status == 'OK') {
+                var longi = results[0].geometry.location.lng();
+                var lati = results[0].geometry.location.lat();
+                globalGeoCord = [longi, lati];
+                callFollowFunction(globalGeoCord);
             }
-            else {
-                //handle non-200er response
-                console.log("HTTP-status code was: " + status);
+            //check the status of the response, if OVER_QUERY_LIMIT use Exponential Backoff
+            else if (status === google.maps.GeocoderStatus.OVER_QUERY_LIMIT) {
+                delayFactor++;
+                setTimeout(function () {
+                    addMarker(contact)
+                }, delayFactor * 1100);
+            } else {
+                geocodingErrorDialog();
             }
+        });
+        //this function runs after geocoding
+        function callFollowFunction(globalGeoCord) {
+            //store geocodin data in variable
+            var geocord = globalGeoCord;
+            //create object for parsing to JSON
+
+
+            //create object for parsing to JSON
+            var updateMe = {
+                owner,
+                firstName,
+                lastName,
+                streetNumber,
+                zip,
+                city,
+                state,
+                country,
+                isPrivate,
+                geocord
+            }
+            //create request
+            let httpRequest = new XMLHttpRequest();
+            //set url
+            let url = "http://localhost:3000/contacts/" + changeId;
+            httpRequest.open("PUT", url, true)
+            httpRequest.setRequestHeader("Content-Type", "application/json");
+            //if connection fails
+            httpRequest.onerror = function () {
+                console.log("Connecting to server with " + url + " failed!\n");
+            };
+            //response from server
+            httpRequest.onload = function (e) {
+                //store received status in object
+                let status = this.status;
+                //if response was code 204
+                if (status === 204) {
+                    console.log(status);
+                }
+                else {
+                    //handle non-200er response
+                    console.log("HTTP-status code was: " + status);
+                }
+            }
+            //wrap js-object to equivalent json string form
+            let json = JSON.stringify(updateMe)
+            //send request to server
+            httpRequest.send(json);
+            //return to Map Screen
+            showMapWindow();
         }
-        //wrap js-object to equivalent json string form
-        let json = JSON.stringify(updateMe)
-        //send request to server
-        httpRequest.send(json);
-        //return to Map Screen
-        showMapWindow();
     }
 }
